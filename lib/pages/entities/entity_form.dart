@@ -6,22 +6,20 @@ import 'package:simple_form_flutter/siddd/lib/library.dart';
 class EntityForm extends StatefulWidget {
   final Entity? entityUpdate;
   final EntityDao dao;
+  final Map<String, dynamic> params;
 
   const EntityForm({
     Key? key,
     this.entityUpdate,
     required this.dao,
+    required this.params,
   }) : super(key: key);
 
   @override
-  State<EntityForm> createState() => _EntityFormState(dao);
+  State<EntityForm> createState() => _EntityFormState();
 }
 
 class _EntityFormState extends State<EntityForm> {
-  final EntityDao _dao;
-
-  _EntityFormState(this._dao);
-
   @override
   void initState() {
     super.initState();
@@ -30,7 +28,7 @@ class _EntityFormState extends State<EntityForm> {
     }
   }
 
-  final _controllerNomeContato = TextEditingController();
+  final _controllerNome = TextEditingController();
   final _controllerTelefone = TextEditingController();
 
   bool _validateNumConta = false;
@@ -40,24 +38,25 @@ class _EntityFormState extends State<EntityForm> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text('Novo contato'),
+          title: const Text('Novo entity'),
         ),
         body: SingleChildScrollView(
           child: Column(
             children: <Widget>[
               Field(
-                  controller: _controllerNomeContato,
-                  labelText: "Nome",
-                  dica: "Fulano",
-                  validate: _validateNumConta,
-                  icon: Icons.person),
-              Editor(
+                controller: _controllerNome,
+                labelText: widget.params['name']['labelText'],
+                hintText: widget.params['name']['hintText'],
+                validate: _validateNumConta,
+                icon: Icons.person,
+              ),
+              Field(
                 controller: _controllerTelefone,
-                rotulo: "Telefone",
-                dica: "99 999999999",
+                labelText: widget.params['name']['labelText'],
+                hintText: widget.params['name']['hintText'],
                 validate: _validateValorTransf,
                 icon: Icons.phone,
-                tipoInput: TextInputType.number,
+                keyboardType: TextInputType.number,
               ),
               Padding(
                 padding: const EdgeInsets.only(top: 25),
@@ -65,9 +64,9 @@ class _EntityFormState extends State<EntityForm> {
                   width: MediaQuery.of(context).size.width * 0.9,
                   child: ElevatedButton(
                     child: const Text('SALVAR'),
-                    onPressed: () => widget.contatoUpdate != null
-                        ? _atualizaContato(widget.contatoUpdate!.id)
-                        : _criaContato(context),
+                    onPressed: () => widget.entityUpdate != null
+                        ? _updateEntity(widget.entityUpdate!.uid.getOrCrash)
+                        : _createEntity(context),
                   ),
                 ),
               )
@@ -76,38 +75,38 @@ class _EntityFormState extends State<EntityForm> {
         ));
   }
 
-  _preencheCampos(Contato contatoUpdate) {
-    _controllerNomeContato.text = contatoUpdate.nomeContato;
-    _controllerTelefone.text = contatoUpdate.telefone;
+  _preencheCampos(Entity entityUpdate) {
+    _controllerNome.text = entityUpdate.;
+    _controllerTelefone.text = entityUpdate.telefone;
   }
 
-  _atualizaContato(int idContato) {
-    final String nomeContato = _controllerNomeContato.text;
+  _updateEntity(String idEntity) {
+    final String nomeEntity = _controllerNome.text;
     final String telefone = _controllerTelefone.text;
 
-    final contatoUpdate = Contato(idContato, nomeContato, telefone);
-    _dao.updateContact(contatoUpdate).then((id) => {
+    final entityUpdate = Entity(idEntity, nomeEntity, telefone);
+    _dao.updateContact(entityUpdate).then((id) => {
           Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => const ListaContatos()))
+              MaterialPageRoute(builder: (context) => const ListaEntitys()))
         });
   }
 
-  _criaContato(BuildContext context) {
-    final String nomeContato = _controllerNomeContato
-        .text; //int.tryParse(_controllerNomeContato.text); //Tenta converter para int se não retorna nulo
+  _createEntity(BuildContext context) {
+    final String nomeEntity = _controllerNome
+        .text; //int.tryParse(_controllerNome.text); //Tenta converter para int se não retorna nulo
     final String telefone = _controllerTelefone.text;
 
-    _retornaErroCamposVazios(nomeContato, telefone);
+    _retornaErroCamposVazios(nomeEntity, telefone);
 
-    if (_verificaCamposVazios(nomeContato, telefone)) {
-      final contatoCriado = Contato(0, nomeContato, telefone);
-      _dao.save(contatoCriado).then((id) => Navigator.pop(context));
+    if (_verificaCamposVazios(nomeEntity, telefone)) {
+      final entityCriado = Entity(0, nomeEntity, telefone);
+      _dao.save(entityCriado).then((id) => Navigator.pop(context));
     }
   }
 
-  _retornaErroCamposVazios(nomeContato, telefone) {
+  _retornaErroCamposVazios(nomeEntity, telefone) {
     setState(() {
-      nomeContato != null && nomeContato != ""
+      nomeEntity != null && nomeEntity != ""
           ? _validateNumConta = false
           : _validateNumConta = true;
       telefone != null && telefone != ""
@@ -116,8 +115,8 @@ class _EntityFormState extends State<EntityForm> {
     });
   }
 
-  bool _verificaCamposVazios(nomeContato, telefone) {
-    return ((nomeContato != null && nomeContato != "") &&
+  bool _verificaCamposVazios(nomeEntity, telefone) {
+    return ((nomeEntity != null && nomeEntity != "") &&
             telefone != null &&
             telefone != "")
         ? true
